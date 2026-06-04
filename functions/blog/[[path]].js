@@ -17,36 +17,49 @@ class DomainRewriter {
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  
-  // Set the destination to your Elementor site
   url.hostname = "oindbzby.elementor.cloud";
 
-  const proxyRequest = new Request(url.toString(), context.request);
-  proxyRequest.headers.set("Host", "oindbzby.elementor.cloud");
+  // 1. Rebuild headers to look like a human browser
+  const proxyHeaders = new Headers();
+  proxyHeaders.set("Host", "oindbzby.elementor.cloud");
   
-  // Fetch from Elementor, but use { redirect: 'manual' } so we can intercept them
-  const response = await fetch(proxyRequest, {
-    redirect: 'manual'
-  });
+  // Pass the user's actual browser info so Elementor doesn't think we are a bot
+  const userAgent = context.request.headers.get("User-Agent") || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+  proxyHeaders.set("User-Agent", userAgent);
+  proxyHeaders.set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+  proxyHeaders.set("Accept-Language", "en-US,en;q=0.5");
 
-  // 1. Intercept and rewrite Redirects (e.g., Trailing slash redirects)
+  // Setup the request configuration
+  const requestInit = {
+    method: context.request.method,
+    headers: proxyHeaders,
+    redirect: 'manual'
+  };
+
+  // Only attach a body if it's a POST/PUT request (like submitting a search form)
+  if (context.request.method !== "GET" && context.request.method !== "HEAD") {
+    requestInit.body = context.request.body;
+  }
+
+  // 2. Fetch the page with our camouflaged headers
+  const proxyRequest = new Request(url.toString(), requestInit);
+  const response = await fetch(proxyRequest);
+
+  // 3. Handle WordPress Redirects
   if (response.status >= 300 && response.status < 400) {
     const location = response.headers.get('Location');
     if (location) {
-      // Swap the domain in the redirect header
       const newLocation = location.replace(
         "https://oindbzby.elementor.cloud",
         "https://travel-blog-6zi.pages.dev"
       );
-      
-      // Create a new response with the fixed location
       const redirectResponse = new Response(response.body, response);
       redirectResponse.headers.set('Location', newLocation);
       return redirectResponse;
     }
   }
 
-  // 2. If it's a normal page load, apply the HTMLRewriter
+  // 4. Apply the HTMLRewriter to swap domains in links/images
   return new HTMLRewriter()
     .on('[href]', new DomainRewriter())
     .on('[src]', new DomainRewriter())
