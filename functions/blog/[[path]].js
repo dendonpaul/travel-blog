@@ -5,11 +5,8 @@ class DomainRewriter {
     for (const attr of attributes) {
       const value = element.getAttribute(attr);
       if (value) {
-        // Clean 1-to-1 domain swap without appending /blog.
-        // A link to "https://oindbzby.elementor.cloud/blog/my-post"
-        // simply becomes "https://travel-blog-6zi.pages.dev/blog/my-post"
         const newValue = value.replace(
-          "https://lltjwccw.elementor.cloud", 
+          "https://oindbzby.elementor.cloud", 
           "https://travel-blog-6zi.pages.dev"
         );
         element.setAttribute(attr, newValue);
@@ -22,19 +19,34 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   
   // Set the destination to your Elementor site
-  url.hostname = "lltjwccw.elementor.cloud";
+  url.hostname = "oindbzby.elementor.cloud";
 
-  // We are letting the url.pathname stay exactly as it is! 
-  // "/blog" stays "/blog".
-
-  // Create the proxy request
   const proxyRequest = new Request(url.toString(), context.request);
-  proxyRequest.headers.set("Host", "lltjwccw.elementor.cloud");
+  proxyRequest.headers.set("Host", "oindbzby.elementor.cloud");
   
-  // Fetch the original response from Elementor
-  const response = await fetch(proxyRequest);
+  // Fetch from Elementor, but use { redirect: 'manual' } so we can intercept them
+  const response = await fetch(proxyRequest, {
+    redirect: 'manual'
+  });
 
-  // Apply the HTMLRewriter before sending it to the user
+  // 1. Intercept and rewrite Redirects (e.g., Trailing slash redirects)
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get('Location');
+    if (location) {
+      // Swap the domain in the redirect header
+      const newLocation = location.replace(
+        "https://oindbzby.elementor.cloud",
+        "https://travel-blog-6zi.pages.dev"
+      );
+      
+      // Create a new response with the fixed location
+      const redirectResponse = new Response(response.body, response);
+      redirectResponse.headers.set('Location', newLocation);
+      return redirectResponse;
+    }
+  }
+
+  // 2. If it's a normal page load, apply the HTMLRewriter
   return new HTMLRewriter()
     .on('[href]', new DomainRewriter())
     .on('[src]', new DomainRewriter())
