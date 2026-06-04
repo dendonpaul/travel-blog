@@ -1,14 +1,14 @@
 class LinkRewriter {
   element(element) {
-    // Determine which attribute to look at based on the tag type
     const attributeName = element.tagName === 'form' ? 'action' : 'href';
     const value = element.getAttribute(attributeName);
     
     if (value) {
-      // Only swap the domain for clickable links and forms
+      // Look ONLY for the domain name, ignoring the protocol (http/https)
+      // This prevents the double "https://https//" glitch.
       const newValue = value.replace(
         "lltjwccw.elementor.cloud", 
-        "https://travel-blog-6zi.pages.dev"
+        "travel-blog-6zi.pages.dev"
       );
       element.setAttribute(attributeName, newValue);
     }
@@ -19,7 +19,6 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   url.hostname = "lltjwccw.elementor.cloud";
 
-  // Rebuild headers to bypass Elementor Bot Protection
   const proxyHeaders = new Headers();
   proxyHeaders.set("Host", "lltjwccw.elementor.cloud");
   
@@ -41,13 +40,13 @@ export async function onRequest(context) {
   const proxyRequest = new Request(url.toString(), requestInit);
   const response = await fetch(proxyRequest);
 
-  // Intercept and rewrite redirects (fixes trailing slash issues)
   if (response.status >= 300 && response.status < 400) {
     const location = response.headers.get('Location');
     if (location) {
+      // Also stripped the https:// here for safety on redirects
       const newLocation = location.replace(
-        "https://lltjwccw.elementor.cloud",
-        "https://travel-blog-6zi.pages.dev"
+        "lltjwccw.elementor.cloud",
+        "travel-blog-6zi.pages.dev"
       );
       const redirectResponse = new Response(response.body, response);
       redirectResponse.headers.set('Location', newLocation);
@@ -55,7 +54,6 @@ export async function onRequest(context) {
     }
   }
 
-  // Apply the HTMLRewriter ONLY to <a> tags (links) and <form> tags
   return new HTMLRewriter()
     .on('a[href]', new LinkRewriter())
     .on('form[action]', new LinkRewriter())
