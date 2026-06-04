@@ -1,6 +1,6 @@
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  url.hostname = "oindbzby.elementor.cloud";
+  url.hostname = "lltjwccw.elementor.cloud";
 
   // This removes "/blog" before fetching from Elementor
   url.pathname = url.pathname.replace(/^\/blog/, "");
