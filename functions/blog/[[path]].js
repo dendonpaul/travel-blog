@@ -7,7 +7,7 @@ class LinkRewriter {
     if (value) {
       // Only swap the domain for clickable links and forms
       const newValue = value.replace(
-        "https://oindbzby.elementor.cloud", 
+        "lltjwccw.elementor.cloud", 
         "https://travel-blog-6zi.pages.dev"
       );
       element.setAttribute(attributeName, newValue);
@@ -17,11 +17,11 @@ class LinkRewriter {
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  url.hostname = "oindbzby.elementor.cloud";
+  url.hostname = "lltjwccw.elementor.cloud";
 
   // Rebuild headers to bypass Elementor Bot Protection
   const proxyHeaders = new Headers();
-  proxyHeaders.set("Host", "oindbzby.elementor.cloud");
+  proxyHeaders.set("Host", "lltjwccw.elementor.cloud");
   
   const userAgent = context.request.headers.get("User-Agent") || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
   proxyHeaders.set("User-Agent", userAgent);
@@ -46,7 +46,7 @@ export async function onRequest(context) {
     const location = response.headers.get('Location');
     if (location) {
       const newLocation = location.replace(
-        "https://oindbzby.elementor.cloud",
+        "https://lltjwccw.elementor.cloud",
         "https://travel-blog-6zi.pages.dev"
       );
       const redirectResponse = new Response(response.body, response);
