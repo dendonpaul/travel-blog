@@ -22,7 +22,7 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   
   // Set the destination to your Elementor site
-  url.hostname = "oindbzby.elementor.cloud";
+  url.hostname = "lltjwccw.elementor.cloud";
 
   // We are letting the url.pathname stay exactly as it is! 
   // "/blog" stays "/blog".
